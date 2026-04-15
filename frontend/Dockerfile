@@ -1,0 +1,22 @@
+# ── Stage 1: build ────────────────────────────────────────────────────────────
+FROM node:20-alpine AS builder
+
+WORKDIR /app
+
+COPY package*.json ./
+RUN npm ci
+
+COPY . .
+
+# No VITE_API_BASE — requests will use relative URLs, proxied by nginx
+RUN npm run build
+
+# ── Stage 2: runtime ──────────────────────────────────────────────────────────
+FROM nginx:1.27-alpine AS runtime
+
+COPY --from=builder /app/dist /usr/share/nginx/html
+COPY nginx.conf /etc/nginx/conf.d/default.conf
+
+EXPOSE 80
+
+CMD ["nginx", "-g", "daemon off;"]

@@ -1,0 +1,26 @@
+services:
+  backend:
+    build:
+      context: ./backend
+    environment:
+      DATABASE_URL: sqlite:///data/tasks.db
+      RUST_LOG: info
+      TZ: America/Sao_Paulo
+    volumes:
+      - tasks-data:/data
+      - /etc/localtime:/etc/localtime:ro
+    restart: unless-stopped
+    # Not exposed externally — only reachable by frontend via the Docker network
+
+  frontend:
+    build:
+      context: ./frontend
+    ports:
+      - "80:80"
+    depends_on:
+      - backend
+    restart: unless-stopped
+
+volumes:
+  tasks-data:
+    driver: local
